@@ -1,40 +1,21 @@
-# Derma.co — Derma-Scan Frontend & FastAPI Integration Guide
+1. Frontend: js/data.js me URL auto-switch
 
-Welcome to **Derma.co**, a complete, multi-page, vanilla HTML5/CSS3/JS frontend for the **Derma-Scan** AI-assisted skin screening web application.
+Local pe local backend, live pe Render wala:
 
----
+javascript
+const IS_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
-## 1. Running the FastAPI Backend Locally
+export const API_BASE_URL = IS_LOCAL
+  ? "http://127.0.0.1:8000"
+  : "https://derma-co.onrender.com";
 
-Inside your `backend/app/` directory (where your `app.py` and trained `derm_classifier_model.h5` live), run:
+(Agar tumhari data.js me export nahi use ho raha, to const API_BASE_URL = ... hi rakho.)
 
-```bash
-uvicorn app:app --reload --host 127.0.0.1 --port 8000
-```
-*(If your main FastAPI file is named `main.py`, replace `app:app` with `main:app`.)*
+2. Backend: app.py me CORS update
 
-Verify the backend is alive by visiting `http://127.0.0.1:8000/` or `http://127.0.0.1:8000/docs`.
+Jab frontend host hoga, uska URL bhi allow_origins me chahiye, warna browser block karega:
 
----
-
-## 2. Serving the Frontend Locally
-
-Open a second terminal inside `derma-scan/frontend/` and start a local static server on port `5500`:
-
-```bash
-cd derma-scan/frontend
-python -m http.server 5500
-```
-
-Then open **`http://127.0.0.1:5500/index.html`** (or `http://localhost:5500/index.html`) in your browser.
-
----
-
-## 3. FastAPI CORS Configuration (`localhost` vs `127.0.0.1`)
-
-Browsers treat `http://127.0.0.1:5500` and `http://localhost:5500` as **two completely different origins**. Ensure your FastAPI `app.py` includes `CORSMiddleware` listing both origins (or `["*"]` during local development without credentials):
-
-```python
+python
 from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
@@ -42,29 +23,40 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
+        "https://prateek8683.github.io",   # GitHub Pages (ya jahan frontend host karo)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
-```
 
----
+@app.get("/")
+def health():
+    return {"status": "ok", "service": "Derma-Scan API"}
 
-## 4. Production Deployment Notes
+Health route se Render ko pata chalta hai ki app zinda hai.
 
-- **Production API:** The frontend is configured to use `https://derma-co.onrender.com`. Update `API_BASE_URL` in `js/data.js` if the deployed backend URL changes.
-- **No Frontend Secrets:** Never place private API keys, Hugging Face tokens, or database credentials inside any frontend `.js` or `.html` file.
+3. Model file ka masla (sabse zaroori)
 
----
+Model aur .npy GitHub repo me nahi hain, to Render par app crash hogi. Model ko GitHub Release me upload karo aur startup par download karao:
 
-## 5. Troubleshooting Common Issues
+python
+import os, urllib.request
 
-| Issue / Symptom | Cause & Fix |
-| :--- | :--- |
-| **CORS policy blocked request** | Ensure both `http://127.0.0.1:5500` and `http://localhost:5500` are in FastAPI's `allow_origins`. |
-| **`Failed to fetch` / Network error** | Backend is not running on port `8000`, or `API_BASE_URL` points to the wrong port. |
-| **`422 Unprocessable Entity`** | FastAPI expects the multipart field name to be **`file`**. `js/scan.js` uses `formData.append("file", selectedFile)` and leaves `Content-Type` unset so the browser generates the boundary automatically. |
-| **`413 Payload Too Large`** | The image exceeds the server or frontend size limit (default 10 MB in `js/data.js`). |
-| **Live Camera not starting** | `navigator.mediaDevices.getUserMedia` requires a secure context (`https://`, `http://localhost`, or `http://127.0.0.1`). Opening via `file://` or an insecure LAN IP blocks camera access. |
-| **Changes to JS/CSS not appearing** | Hard-refresh your browser (`Ctrl + Shift + R` on Windows) to bypass cached static assets. |
+MODEL_PATH = "skin_classifier_new.pkl"
+MODEL_URL = "https://github.com/Prateek8683/Derma.co/releases/download/v1.0/skin_classifier_new.pkl"
+
+if not os.path.exists(MODEL_PATH):
+    print("Downloading model...")
+    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+
+Ye model load hone se pehle chalna chahiye. Release public repo me hi seedha download hota hai.
+
+4. Render settings fix
+
+Pichla error backend/requirements.txt not found ka tha. Render → Settings me:
+
+Build Command: pip install -r backend/requirements.txt (agar GitHub root par backend/ dikhta hai)
+Start Command: cd backend/app && uvicorn app:app --host 0.0.0.0 --port $PORT
+Environment Variable: PYTHON_VERSION = 3.11.9
+Health Check Path: /
