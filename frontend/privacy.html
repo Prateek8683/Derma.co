@@ -17,7 +17,7 @@
             <strong>1. Overview:</strong> This page contains placeholder privacy disclosures for the Derma.co (Derma-Scan) project. Before public deployment, review and adapt this policy with qualified legal counsel.
           </p>
           <p>
-            <strong>2. Image Processing on Derma-Scan:</strong> When you select or capture an image on <code>scan.html</code>, check the consent box, and click "Analyze Skin Image", your image file is transmitted via an HTTP POST request (<code>multipart/form-data</code> under field <code>file</code>) to the configured backend server (by default <code>http://127.0.0.1:8000/predict</code>) so the model can compute a screening prediction.
+            <strong>2. Image Processing on Derma-Scan:</strong> When you select or capture an image on <code>scan.html</code>, check the consent box, and click "Analyze Skin Image", your image file is transmitted via an HTTP POST request (<code>multipart/form-data</code> under field <code>file</code>) to the configured backend server (<code>https://derma-co.onrender.com</code>) so the model can compute a screening prediction.
           </p>
           <p>
             <strong>3. Browser Storage:</strong> The Derma.co frontend does not store your uploaded skin photos or screening outputs in browser <code>localStorage</code> or <code>sessionStorage</code>. Temporary preview URLs created with <code>URL.createObjectURL()</code> are revoked when you remove the image or reset the scan.
