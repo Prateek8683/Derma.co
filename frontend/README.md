@@ -53,7 +53,7 @@ app.add_middleware(
 
 ## 4. Production Deployment Notes
 
-- **`127.0.0.1` is Local-Only:** In production, `127.0.0.1` points to the visitor's own device, not your server. Before deploying, update `API_BASE_URL` in `js/data.js` (and `js/scan.js`) to your deployed HTTPS backend URL.
+- **Production API:** The frontend is configured to use `https://derma-co.onrender.com`. Update `API_BASE_URL` in `js/data.js` if the deployed backend URL changes.
 - **No Frontend Secrets:** Never place private API keys, Hugging Face tokens, or database credentials inside any frontend `.js` or `.html` file.
 
 ---
